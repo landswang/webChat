@@ -1,21 +1,18 @@
 package cn.ictgu.chat.controller;
 
-import java.security.Principal;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Controller;
-
-import com.alibaba.fastjson.JSON;
-
 import cn.ictgu.chat.Model.BaseMessage;
 import cn.ictgu.chat.Model.ChatMessage;
 import cn.ictgu.mongo.model.User;
 import cn.ictgu.mongo.service.UserService;
+import com.alibaba.fastjson.JSON;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+
+import java.security.Principal;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Silence on 2017/4/21.
@@ -44,7 +41,6 @@ public class ChatController {
 		this.send(baseMessage);
 	}
 
-	@Async
 	private void send(BaseMessage message) {
 		message.setDate(new Date());
 		ChatMessage chatMessage = createMessage(message.getSender(), message.getContent());
