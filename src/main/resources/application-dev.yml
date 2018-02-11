@@ -1,0 +1,23 @@
+debug: true
+logging:
+    level:
+        root: debug
+        tk:
+            mybatis:
+                springboot:
+                    mapper: trace
+server:
+  port: 9090
+spring:
+    datasource:
+        driver-class-name: com.mysql.jdbc.Driver
+        druid:
+            initial-size: 1
+            max-active: 20
+            min-idle: 1
+            stat-view-servlet:
+                allow: true
+            test-on-borrow: true
+        password: w123321
+        url: jdbc:mysql://localhost:3307/test
+        username: root

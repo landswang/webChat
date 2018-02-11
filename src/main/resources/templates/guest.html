@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login | Any-Chat</title>
+    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <script src="/webjars/jquery/jquery.min.js"></script>
+    <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+</head>
+
+<body style="background-color: #f1f1f1; padding-bottom: 0">
+
+<!-- Start Content -->
+<div class="container" style="margin-top: 350px">
+<form th:action="@{/login}" method="post">
+                        <div class="form-group">
+                            <div class="input-group col-md-2 col-md-offset-4">
+                    		
+                             
+                                <button type="submit" class="btn btn-primary btn-block">点我马上咨询在线客服</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="hidden" class="form-control" name="username" id="username"  th:value=${cUUID}  >
+                    		 <input type="hidden"  name="password" value="nopassw0rd" id="password" >
+                        </div>
+                    </form>
+
+</div>
+<!-- End Content -->
+
+</body>
+
+</html>
