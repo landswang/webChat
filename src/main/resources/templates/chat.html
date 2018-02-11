@@ -3,7 +3,12 @@
 <head>
     <title>Chat Room | Any-Chat</title>
     <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <script src="/webjars/jquery/jquery.min.js"></script>
+    <link href="/webuploader/webuploader.css" rel="stylesheet">
+    <link rel="stylesheet" href="/webuploadercss/viewer.css" type="text/css">
+	<script type="text/javascript" src="/webuploader/viewer.js"></script>   
+    <script src="/webuploader/jquery-2.1.4.min.js"></script>
+    <script src="/webuploader/uploadImage.js"></script>
+    <script src="/webuploader/webuploader.js"></script>
     <script src="/webjars/sockjs-client/sockjs.min.js"></script>
     <script src="/webjars/stomp-websocket/stomp.min.js"></script>
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
@@ -54,7 +59,14 @@
             margin-bottom: 5px;
             position: relative;
         }
+        .uploader-list{
+        	width:750px;
+        }
     </style>
+    <script type="text/javascript">
+  
+   
+    </script>
 </head>
 <body>
 <body style="background-color: #f1f1f1; padding-bottom: 0">
@@ -73,22 +85,22 @@
   			<button class="btn btn-default disabled" id="groupBtn">群聊模式</button>
 		</form>
 	</div>
-
     <div class="row center-block">
 
         <div style="margin: 0 10px; width: 350px; display: inline-block">
 
             <div class="panel panel-danger" >
-                <div class="panel-heading">
+                <div id=_userInfoList class="panel-heading">
                     <div style="display: inline-block; float: left">
-                        <img th:src="${user.avatar}" alt="" class="img-circle img-responsive" height="64px" width="64px" style="margin: 0 10px;">
+                        <img th:src="${user.avatar}" alt="" class="img-circle img-responsive" height="64px" width="64px" id="cUserAvatar" style="margin: 0 10px;">
                     </div>
                     <div style="display:inline-block; width: 200px; height: 64px;">
-                        <p style="margin: 0; padding: 6px 0; font-size: 20px" th:text="${user.nickname}"></p>
+                    	<input type="hidden" ></input>
+                        <p id="cUserNickName" th:text="${user.nickname}" style="margin: 0; padding: 6px 0; font-size: 20px" ></p>
                         <p style="margin-bottom: 0; overflow: hidden; height: 16px">Online</p>
                     </div>
                 </div>
-                <div class="panel-body" style="height: 390px; overflow-y: scroll; overflow: auto">
+                <div class="panel-body" id=cFridendList style="height: 390px; overflow-y: scroll; overflow: auto">
 
                     <button class="friend" th:each="friend : ${friends}">
                         <div class="media-left">
@@ -110,21 +122,31 @@
         <div class="col-md-8">
             <div class="panel panel-primary">
                 <div class="panel-heading">
-                    <h3 class="panel-title"><span class="glyphicon glyphicon-console"></span> [当前] - [<span id="target">所有人</span>]</h3>
+                    <h3 class="panel-title"><span class="glyphicon glyphicon-console"></span> [当前] - [<span id="target">等待客服</span>] 
+                    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                    <a onclick="loadHistory()" style="color:white; font-size:12px;"> 点击加载历史消息(每次加载10条.)</a>
+                    </span></h3> 
+                    
                 </div>
-                <div class="panel-body" style="height: 380px; overflow-y: scroll; overflow: auto" id="messageWindow">
-
-
-                </div>
-
+                <div class="panel-body" style="height: 380px; overflow-y: scroll; overflow: auto" id="messageWindow"><div id="thelist" class="uploader-list"></div> </div>
             </div>
 
             <div class="row">
-                <div class="col-xs-9 col-md-10">
-                    <input type="text" class="form-control" placeholder="Message" id="message">
+                <div class="col-xs-6 col-md-8">
+                    <input type="text" class="form-control" placeholder="在此处键入消息" id="message">
                 </div>
-                <div class="col-xs-3 col-md-2">
-                    <button class="btn btn-primary btn-block" id="send"><span class="glyphicon glyphicon-send"></span> 发送</button>
+                
+				<div class="col-xs-1 col-md-1">
+                    <!--单文件-->
+					<div id="uploader" class="wu-example">
+					    <!--用来存放文件信息-->					    
+					    <div class="btns">
+					        <div id="attach"></div>
+					    </div>
+					</div>
+                </div>
+                <div class="col-xs-3 col-md-3">
+                    <button class="btn btn-primary btn-block"   id="send"><span class="glyphicon glyphicon-send"></span> 发送 (支持ENTER键) </button> 
                 </div>
             </div>
         </div>
@@ -136,6 +158,7 @@
 <script>
 
     var target = "TO_ALL";
+    var _mixMesId = 10000050;
 
     var stompClient = null;
 
@@ -145,44 +168,121 @@
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
             stompClient.subscribe('/topic/notice', function (message) {
-                showMessage(JSON.parse(message.body));
+            	initGuestList(JSON.parse(message.body));
             });
             stompClient.subscribe('/user/topic/chat', function (message) {
-                showMessage(JSON.parse(message.body));
+            	showMessage(JSON.parse(message.body));
+            });
+            stompClient.subscribe('/user/topic/initserver', function (message) {
+
+            	//alert(message)
+            	responeGuest(JSON.parse(message.body));
+            });
+            
+            stompClient.subscribe('/user/topic/hismsg', function (message) {
+
+                var msgs = JSON.parse(message.body);
+                var msgss = "";
+                if(msgs.length!=0){
+	                _mixMesId = msgs[0].id
+		            for (var i=0;i<msgs.length;i++)
+					{ 
+		            	msgss+=initMsg(msgs[i]);
+					}
+		             showhisMessage(msgss);
+	             }
             });
         });
+        
     }
+    function responeGuest(user){
+    	//alert(user)
+    	var cls ="<button class='friend'>"+
+				 	"<div class='media-left'>"+
+				 	"<a href='#'>"+
+				 	" <img class='media-object f-image img-circle' src='"+user.avatar+"' alt=''> </a></div>"+
+				 	"<div class='media-body' style='text-align: left'>"+
+				 	" <h4 class='media-heading f-nickname'  >"+user.nickname+"</h4>"+
+				 	"<p class='text-danger f-signature' th:text='${#dates.format("+user.joinTime+", 'MM-dd HH:mm')}'>offline</p>"+
+				 	"<p class='hidden f-username' th:text='"+user.username+"'>"+user.username+"</p>"+
+				 	"</div></button>"; 
+		$("#cFridendList").append(cls);    	
+    }
+    function initGuestList(cList){
+    	var cls = "<h4 class='media-heading f-nickname' th:text='"+cList.nickname+"'></h4>"+
+            		"<p class='text-danger f-signature' th:text=''>offline</p>"+
+            		"<p class='hidden f-username' th:text='"+"+cList.username+"+"'>anoy</p>"
+    	$("#cFridendList").append();    	
+    }
+			 
+    function initMsg(message){
+    	msgContent = "<div class='message-div row'>"+
+			        "<div style='display: inline-block; margin-right: 5px;' >"+
+			        "<img class='media-object f-image img-circle' style='position: absolute' src=" + message.avatar + ">"+
+			        "</div>"+
+			        " <div style='margin-left: 55px'>"+
+			        "<p class='user-nickname'>" + message.nickname + "</p> <p class='user-time'>"+message.sendTime+"</p><br>";
+        if(message.content.indexOf("d41d8cd98f00b204e9800998ecf8427e") != -1){
+			msgContent+= "<div class='message-box-left'><a href=" + message.content + " target='_blank' ><img class='image' src='" + message.content + "' width='400px'/></a></div></div></div><br>" 
+		}else{
+			msgContent+= "<div class='message-box-left'>" + message.content + "</div></div></div><br>" 
+		}	
 
+        return msgContent;
+    }
+    function showhisMessage(message) {
+        $("#messageWindow").prepend(message);
+		$("#messageWindow").scrollTop(0);
+    }
     function showMessage(message) {
-        $("#messageWindow").append("<div class='message-div row'>"+
-                                   "<div style='display: inline-block; margin-right: 5px;' >"+
-                                   "<img class='media-object f-image img-circle' style='position: absolute' src=" + message.avatar + ">"+
-                                   "</div>"+
-                                   " <div style='margin-left: 55px'>"+
-                                   "<p class='user-nickname'>" + message.nickname + "</p> <p class='user-time'>"+message.sendTime+"</p><br>"+
-                                   "<div class='message-box-left'>" + message.content + "</div></div></div><br>"
-        );
+        $("#messageWindow").append(initMsg(message));
+        var chat = document.getElementById("messageWindow");
+        chat.scrollTop = chat.scrollHeight;
     }
 
+    function changeAUser(username){
+        target = username;
+        var nickname = $(this).find("h4.f-nickname").text();
+        $("#target").text(username);
+        $("#groupBtn").attr("class","btn btn-default");
+    }
+    $(document).keyup(function (e) {
+	    if (e.keyCode == 13) {
+	    	sendmsg($("#message").val())
+	    }  
+	});  
+	function sendmsg(message){
+	  if (target == "TO_ALL" || target == ""){
+		 alert("请选择用户");
+    	 return;
+        }else{
+       	 if (message.replace(/(^s*)|(s*$)/g, "").length ==0){ 
+       	 	alert('不能为空'); 
+       	 	return;
+      	 }
+        var content = "{'type':'text','content':'" + message + "','toType':'USER','receiver':'"+target+"'}";
+        stompClient.send("/app/chat", {}, content);
+        }            
+        $("#message").val("");
+	}
     $(function () {
         connect();
-
         $("#send").click(function () {
-            if (target == "TO_ALL"){
-                stompClient.send("/app/all", {}, $("#message").val());
-            }else{
-                var content = "{'type':'text','content':'" + $("#message").val() + "','toType':'USER','receiver':'"+target+"'}";
-                stompClient.send("/app/chat", {}, content);
-            }
-            $("#message").val("");
+        	sendmsg($("#message").val());
         });
 
         $(".friend").click(function () {
-            target = $(this).find("p.f-username").text();
-            var nickname = $(this).find("h4.f-nickname").text();
-            $("#target").text(nickname);
-            $("#groupBtn").attr("class","btn btn-default");
+        	if(target != ($(this).find("p.f-username").text())){
+	            target = $(this).find("p.f-username").text();
+	            var nickname = $(this).find("h4.f-nickname").text();
+	            $("#target").text(nickname);
+	            $("#groupBtn").attr("class","btn btn-default");
+	            $("#messageWindow").html("");
+	            _mixMesId = 10000050;
+	            loadHistory();
+            }
         });
+        
         
         $("#groupBtn").click(function(){
         	$(this).attr("class","btn btn-default disabled");
@@ -208,6 +308,10 @@
         	);
         });
     });
+    function loadHistory(){
+    	var content = "{'type':'text','id':"+_mixMesId+",'send':'','receiver':'"+target+"'}";
+        stompClient.send("/app/hismsg", {}, content);
+    }
 
 </script>
 <!-- End Content -->

@@ -17,18 +17,15 @@
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li>
-                        <a href="/" >首页</a>
+                        	作者
                     </li>
                     <li>
-                        <a href="http://www.ictgu.cn/author">作者</a>
-                    </li>
-                    <li>
-                        <a href="https://github.com/ChinaSilence/any-chat" target="_blank">Github</a>
+                        torreswangzh@gmail.com
                     </li>
                 </ul>
                 <div class="navbar-form navbar-right">
                     <a class="btn btn-danger" th:href="@{/logout}" th:if="${#httpServletRequest.remoteUser}">退出</a>
-                    <a class="btn btn-success" th:href="@{/login}" th:unless="${#httpServletRequest.remoteUser}">登录</a>
+                    <a class="btn btn-success" th:href="@{/login}" th:unless="${#httpServletRequest.remoteUser}">客服登录</a>
                 </div>
             </div>
         </div>
