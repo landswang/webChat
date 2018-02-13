@@ -11,7 +11,7 @@
 
 <body>
 
-<input type="text" class="form-control" name="username" id="username"  th:value=${flag}   >
+<input type="hidden" class="form-control" name="username" id="username"  th:value=${flag}   >
 
 <script type="text/javascript">
 if($("#username").val()!=0){self.location='/vistor';}else{self.location='/chat';}

@@ -1,6 +1,7 @@
 package cn.tw.config.websocket;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
@@ -58,4 +59,10 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer {
         });
         super.configureWebSocketTransport(registration);
     }
+
+    @Override
+    public void configureClientOutboundChannel(ChannelRegistration registration) {
+
+    }
+
 }

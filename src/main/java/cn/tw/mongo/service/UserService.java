@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import cn.tw.mongo.dao.UserDao;
 import cn.tw.mongo.model.User;
+import cn.tw.mongo.util.TdesUtil;
 
 /**
  * User Service Created by torreswangzh@gmail.com 2017/4/22.
@@ -29,7 +30,13 @@ public class UserService {
         if (isExist) {
             return false;
         }
-        udao.insert(user);
+        try {
+            user.setPassword(TdesUtil.encrypt(user.getPassword()));
+            user.setStatus("1");
+            udao.insert(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return true;
     }
 
@@ -46,6 +53,11 @@ public class UserService {
         User user = udao.selectByUserName(username);
         if (user == null) {
             user = this.getByUsername1(username);
+        }
+        try {
+            user.setPassword(TdesUtil.decrypt(user.getPassword()));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return user;
     }

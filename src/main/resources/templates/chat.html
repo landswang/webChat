@@ -4,8 +4,6 @@
     <title>Chat Room | Any-Chat</title>
     <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/webuploader/webuploader.css" rel="stylesheet">
-    <link rel="stylesheet" href="/webuploadercss/viewer.css" type="text/css">
-	<script type="text/javascript" src="/webuploader/viewer.js"></script>   
     <script src="/webuploader/jquery-2.1.4.min.js"></script>
     <script src="/webuploader/uploadImage.js"></script>
     <script src="/webuploader/webuploader.js"></script>
@@ -95,7 +93,7 @@
                         <img th:src="${user.avatar}" alt="" class="img-circle img-responsive" height="64px" width="64px" id="cUserAvatar" style="margin: 0 10px;">
                     </div>
                     <div style="display:inline-block; width: 200px; height: 64px;">
-                    	<input type="hidden" ></input>
+                    	<input id="cUserAccount" type="hidden" th:value="${user.username}">
                         <p id="cUserNickName" th:text="${user.nickname}" style="margin: 0; padding: 6px 0; font-size: 20px" ></p>
                         <p style="margin-bottom: 0; overflow: hidden; height: 16px">Online</p>
                     </div>
@@ -158,9 +156,10 @@
 <script>
 
     var target = "TO_ALL";
-    var _mixMesId = 10000050;
+    var _mixMesId = 1000000050;
 
     var stompClient = null;
+    var gusetList = new Array();//当前客户列表
 
     function connect() {
         var socket = new SockJS('/any-socket');
@@ -174,8 +173,6 @@
             	showMessage(JSON.parse(message.body));
             });
             stompClient.subscribe('/user/topic/initserver', function (message) {
-
-            	//alert(message)
             	responeGuest(JSON.parse(message.body));
             });
             
@@ -193,26 +190,34 @@
 	             }
             });
         });
-        
     }
     function responeGuest(user){
-    	//alert(user)
-    	var cls ="<button class='friend'>"+
-				 	"<div class='media-left'>"+
-				 	"<a href='#'>"+
-				 	" <img class='media-object f-image img-circle' src='"+user.avatar+"' alt=''> </a></div>"+
-				 	"<div class='media-body' style='text-align: left'>"+
-				 	" <h4 class='media-heading f-nickname'  >"+user.nickname+"</h4>"+
-				 	"<p class='text-danger f-signature' th:text='${#dates.format("+user.joinTime+", 'MM-dd HH:mm')}'>offline</p>"+
-				 	"<p class='hidden f-username' th:text='"+user.username+"'>"+user.username+"</p>"+
-				 	"</div></button>"; 
-		$("#cFridendList").append(cls);    	
+    	if(gusetList.length!=0){
+    		for(var i=0;i<gusetList.length;i++){
+    			//if(gusetList[i]==user.username){return}
+    		}
+    	} else{
+	    	var cls ="<button class='friend'>"+
+					 	"<div class='media-left'>"+
+					 	"<a href='#'>"+
+					 	" <img class='media-object f-image img-circle' src='"+user.avatar+"' alt=''> </a></div>"+
+					 	"<div class='media-body' style='text-align: left'>"+
+					 	" <h4 class='media-heading f-nickname'  >"+user.nickname+"</h4>"+
+					 	"<p class='text-danger f-signature' th:text='${#dates.format("+user.joinTime+", 'MM-dd HH:mm')}'>offline</p>"+
+					 	"<p class='hidden f-username' th:text='"+user.username+"'>"+user.username+"</p>"+
+					 	"</div></button>"; 
+			$("#cFridendList").append(cls);   
+			gusetList.push(user.username);
+		} 	
     }
     function initGuestList(cList){
-    	var cls = "<h4 class='media-heading f-nickname' th:text='"+cList.nickname+"'></h4>"+
-            		"<p class='text-danger f-signature' th:text=''>offline</p>"+
-            		"<p class='hidden f-username' th:text='"+"+cList.username+"+"'>anoy</p>"
-    	$("#cFridendList").append();    	
+    	//alert($(this).find("p.f-username").text())
+    	if($(this).find("p.f-username").text()!=cList.username){//cList.username
+        	var cls = "<h4 class='media-heading f-nickname' th:text='"+cList.nickname+"'></h4>"+
+                		"<p class='text-danger f-signature' th:text=''>offline</p>"+
+                		"<p class='hidden f-username' th:text='"+"+cList.username+"+"'>anoy</p>"
+        	$("#cFridendList").append();  
+    	}  	
     }
 			 
     function initMsg(message){
@@ -232,12 +237,54 @@
     }
     function showhisMessage(message) {
         $("#messageWindow").prepend(message);
-		$("#messageWindow").scrollTop(0);
-    }
-    function showMessage(message) {
-        $("#messageWindow").append(initMsg(message));
         var chat = document.getElementById("messageWindow");
         chat.scrollTop = chat.scrollHeight;
+    }
+    function isInArray(arr,value){
+        for(var i = 0; i < arr.length; i++){
+            if(value === arr[i]){
+                return true;
+            }
+        }
+        return false;
+    }
+    function showMessage(message) {//
+    	if(message.username === document.getElementById("cUserAccount").value){
+    		$("#messageWindow").append(initMsg(message));
+	        var chat = document.getElementById("messageWindow");
+	        chat.scrollTop = chat.scrollHeight;
+	    }else{
+	    	if(!isInArray(gusetList,message.username)){
+	    		var cls ="<button class='friend'>"+
+			 	"<div class='media-left'>"+
+			 	"<a href='#'>"+
+			 	" <img class='media-object f-image img-circle' src='"+message.avatar+"' alt=''> </a></div>"+
+			 	"<div class='media-body' style='text-align: left'>"+
+			 	" <h4 class='media-heading f-nickname'  >"+message.nickname+"</h4>"+
+			 	"<p class='text-danger f-signature' th:text='${#dates.format("+message.joinTime+", 'MM-dd HH:mm')}'>新消息</p>"+
+			 	"<p class='hidden f-username' th:text='"+message.username+"'>"+message.username+"</p>"+
+			 	"</div></button>"; 
+				$("#cFridendList").append(cls);   
+				gusetList.push(message.username);
+	    	}else{
+	    		if(target != message.username){
+	    			var arr = $("#cFridendList").find("p.f-username")
+		       		 for(var i = 0; i < arr.length; i++){
+		       	            if(message.username === arr[i].innerHTML){
+		       	            	$("#cFridendList").find("p.f-signature")[i].innerHTML='新消息';
+		       	            }
+		       	     }
+	    		}else{
+	    			$("#messageWindow").append(initMsg(message));
+	    	        var chat = document.getElementById("messageWindow");
+	    	        chat.scrollTop = chat.scrollHeight;
+	    		}
+	    	}
+        }
+        //$(this).find("p.f-signature").text('新消息')
+        //$("#messageWindow").append(initMsg(message));
+        //var chat = document.getElementById("messageWindow");
+        //chat.scrollTop = chat.scrollHeight;
     }
 
     function changeAUser(username){
@@ -267,6 +314,10 @@
 	}
     $(function () {
         connect();
+        var f_username = document.getElementsByClassName("hidden f-username");
+		for(var i=0; i<f_username.length; i++){
+			gusetList.push(f_username[i].innerText);
+		}		
         $("#send").click(function () {
         	sendmsg($("#message").val());
         });
@@ -278,11 +329,11 @@
 	            $("#target").text(nickname);
 	            $("#groupBtn").attr("class","btn btn-default");
 	            $("#messageWindow").html("");
-	            _mixMesId = 10000050;
+	            $(this).find("p.f-signature").text('')
+	            _mixMesId = 1000000050;
 	            loadHistory();
             }
         });
-        
         
         $("#groupBtn").click(function(){
         	$(this).attr("class","btn btn-default disabled");

@@ -62,9 +62,11 @@ public class PageController {
                     "/image/avatar.jpg");
             userService.saveUser(user);
             model.addAttribute("cUUID", user.getUsername());
-            return "guest";
+
+            return "/";
         }
 
+        model.addAttribute("friends", relationService.returnUserNotBusy(user.getUsername()));
         session.setAttribute("CURRENT_GUEST", user);
         model.addAttribute("_vistor", user);
         session.setAttribute("falg", 1);

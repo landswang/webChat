@@ -1,8 +1,8 @@
 package cn.tw.mongo.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -85,11 +85,65 @@ public class RelationService {
                 .collect(Collectors.toList()); // 转化为 List
     }
 
-    public static void main(String[] args) throws Exception {
-        List<String> list = Arrays.asList("a", "b", "c", "d", "a", "a", "d", "d");
-        List<String> duplicateElements = getDuplicateElements(list);
+    /**
+     * 
+     * returnUserNotBusy:(Describe the function of this method) @return @throws
+     */
+    public List<User> returnUserNotBusy(String uname) {
+        List<User> al = listFriends(uname);
+        if (al.size() >= 1) {
+            return al;
+        } else {
+            List<User> als = userService.selectAdminList();
+            if (als != null && als.size() > 0) {
+                int[] usize = new int[als.size()];
+                String[] unamesize = new String[als.size()];
+                for (int i = 0; i < als.size(); i++) {
+                    if (relations.get(als.get(i).getUsername()) != null) {
+                        usize[i] = relations.get(als.get(i).getUsername()).size();
+                    } else {
+                        usize[i] = 0;
+                    }
+                    unamesize[i] = als.get(i).getUsername();
+                }
+                String temp = als.get(0).getUsername();
+                // for (int i = 0; i < usize.length; i++) {
+                // for (int j = i + 1; j < usize.length; j++) {
+                // if (usize[i] > usize[j]) {
+                // temp = unamesize[i];
+                // unamesize[i] = unamesize[j];
+                // unamesize[j] = temp;
+                // }
+                // }
+                // }
+                addFriend(uname, unamesize[0]);
+                return listFriends(uname);
+            }
+            return null;
+        }
 
-        System.out.println("list 中重复的元素：" + duplicateElements);
+    }
+
+    /*
+     * 平均分配
+     */
+    public Map<String, List<String>> allotOfAverage(List<String> users, List<String> tasks) {
+        Map<String, List<String>> allot = new ConcurrentHashMap<String, List<String>>(); // 保存分配的信息
+        if (users != null && users.size() > 0 && tasks != null && tasks.size() > 0) {
+            for (int i = 0; i < tasks.size(); i++) {
+                int j = i % users.size();
+                if (allot.containsKey(users.get(j))) {
+                    List<String> list = allot.get(users.get(j));
+                    list.add(tasks.get(i));
+                    allot.put(users.get(j), list);
+                } else {
+                    List<String> list = new ArrayList<String>();
+                    list.add(tasks.get(i));
+                    allot.put(users.get(j), list);
+                }
+            }
+        }
+        return allot;
     }
 
 }

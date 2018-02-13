@@ -7,7 +7,7 @@
             auto:true, //不自动提交，需要点击
             pick: {
                 id: '#attach',
-                label: '发截图',
+                label: '图',
             },
             server: 'test/save', //后台接收服务
             resize: false,
@@ -75,8 +75,6 @@
         	//alert(fileName)
             $('#' + file.id).find('.progress').fadeOut();
             sendmsg(response.fileName);
-
-            $('.image').viewer();
         	
         });
         //点击上传

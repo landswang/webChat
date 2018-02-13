@@ -35,7 +35,7 @@ public class User {
     // 登录时间
     private Date joinTime;
 
-    private int status;
+    private String status;
 
     public User() {
         super();
@@ -100,11 +100,11 @@ public class User {
         this.id = id;
     }
 
-    public int getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 

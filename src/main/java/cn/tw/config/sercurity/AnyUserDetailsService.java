@@ -33,7 +33,6 @@ public class AnyUserDetailsService implements UserDetailsService {
         User user = userService.getByUsername1(username);
         if (user == null) {
             user = userService.getByUsername(username);
-            // if
         }
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority(ROLE_TAG));

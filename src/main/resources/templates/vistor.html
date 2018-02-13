@@ -89,8 +89,20 @@
                 </div>
                 <div class="panel-body" id=adminList style="height: 390px; overflow-y: scroll; overflow: auto">
 
+                    <button class="friend" th:each="friend : ${friends}">
+                        <div class="media-left">
+                            <a href="#">
+                                <img class="media-object f-image img-circle" th:src="${friend.avatar}" alt="">
+                            </a>
+                        </div>
+                        <div class="media-body" style="text-align: left">
+                            <h4 class="media-heading f-nickname" th:text="${friend.nickname}"></h4>
+                            <p class="text-danger f-signature" th:text="${#dates.format(friend.joinTime, 'MM-dd HH:mm')}">offline</p>
+                            <p class="hidden f-username" th:text="${friend.username}">anoy</p>
+                        </div>
+                    </button>
+
                 </div>
-                 <button class="btn btn-primary btn-block" id="getAList">点击加载客服</button>
             </div>
         </div>
 
@@ -104,7 +116,7 @@
                     
                 </div>
                 <div class="panel-body" style="height: 480px; overflow-y: scroll; overflow: auto" id="messageWindow">
-                     <div id="thelist" class="uploader-list"></div></div> 
+                     <div id="thelist11" class="uploader-list"></div></div> 
                 </div>
          </div>
          <div class="row">
@@ -222,7 +234,7 @@ $(function(){
 	
 	
     var target = "TO_ALL";
-    var _mixMesId = 10000050;
+    var _mixMesId = 100000050;
 
     var stompClient = null;
 
@@ -244,14 +256,15 @@ $(function(){
                 var msgss = "";
                 if(msgs.length!=0){
 	                _mixMesId = msgs[0].id
-		            for (var i=0;i<msgs.length;i++)
-					{ 
+		            for (var i=0;i<msgs.length;i++){ 
 		            	msgss+=initMsg(msgs[i]);
 					}
 		             showhisMessage(msgss);
                 }
             });
         });
+       // stompClient.heartbeat.outgoing = 20000; // client will send heartbeats every 20000ms
+       //stompClient.heartbeat.incoming = 0;  
         
     }
 			
@@ -263,10 +276,10 @@ $(function(){
 				        " <div style='margin-left: 55px'>"+
 				        "<p class='user-nickname'>" + message.nickname + "</p> <p class='user-time'>"+message.sendTime+"</p><br>";
 		if(message.content.indexOf("d41d8cd98f00b204e9800998ecf8427e") != -1){
-			msgContent+= "<div class='message-box-left'><img src='" + message.content + "' width='400px' /></div></div></div><br>" 
+			msgContent+= "<div class='message-box-left'><a href=" + message.content + " target='_blank' ><img src='" + message.content + "' width='400px' /></a></div></div></div><br>" 
 		}else{
-			msgContent+= "<div class='message-box-left'>" + message.content + "</div></div></div><br>" 
-		}	        
+			msgContent+= "<div class='message-box-left' >" + message.content + "</div></div></div><br>" 
+		}
         return msgContent;
 					        
     }
@@ -301,33 +314,6 @@ $(function(){
 					 	"</div></button>";       
 		 }
 		$("#adminList").html(aContent)
-		$(".friend").click(function () {
-        	if(target != ($(this).find("p.f-username").text())){
-	            target = $(this).find("p.f-username").text();
-	            var nickname = $(this).find("h4.f-nickname").text();
-	            $("#target").text(nickname);
-	            $("#groupBtn").attr("class","btn btn-default");
-	            
-	            var friend = $(this).find("p.f-username").text();
-	        	if(friend.length == 0){
-	        		return;
-		       	}
-	            $("#messageWindow").html("");
-		       	$.post("/api/common/requestSAdmin",
-		       			{"userName":$("#cUserName").val() ,"friend" : friend},
-		       			function(data){
-		       				if(data){
-		       					//alert(data);
-			       				var content = "{'type':'text','sender':'" + $("#cUserName").val() + "','content':'客户呼叫...','toType':'USER','receiver':'"+target+"'}";
-			       	            stompClient.send("/app/initserver", {}, content);		
-		       				}else{
-		       					alert("用户不存在，添加失败！");
-		       				}
-		       			}
-		       	);
-		       	loadHistory();
-		     }
-       	});
 	
 	}
 	$(document).keyup(function (e) {
@@ -354,14 +340,42 @@ $(function(){
         $("#send").click(function () {
 	    	sendmsg($("#message").val())
         });
-
+		$(".friend").click(function () {
+	            //target = $(this).find("p.f-username").text();
+	            //var nickname = $(this).find("h4.f-nickname").text();
+	            //$("#target").text(nickname);
+	            // $("#groupBtn").attr("class","btn btn-default");
+            var friend = $(this).find("p.f-username").text();
+        	if(friend.length == 0){
+        		return;
+	       	}
+            //_mixMesId = 1000000050;
+	       	$.post("/api/common/requestSAdmin",
+       			{"userName":$("#cUserName").val() ,"friend" : friend},
+       			function(data){
+       				if(data){
+       					//alert(data);
+	       				var content = "{'type':'text','sender':'" + $("#cUserName").val() + "','content':'客户呼叫...','toType':'USER','receiver':'"+target+"'}";
+	       	            stompClient.send("/app/initserver", {}, content);		
+       				}else{
+       					alert("用户不存在，添加失败！");
+       				}
+       			}
+	       	);
+        	loadHistory();
+       	});
         $("#getAList").click(function () {
         	 stompClient.send("/app/all", {}, "123");
         });
-        
-
-       
+        target = $(this).find("p.f-username").text();
+        $("#target").text($(this).find("h4.f-nickname").text());
+    
     });
+    window.onload=function(){
+    	setTimeout(function () {  
+        	loadHistory();
+        }, 1000);  
+  }
     function loadHistory(){
     	var content = "{'type':'text','sender':'" + $("#cUserName").val() + "','id':"+_mixMesId+",'receiver':'" + target + "'}";
         stompClient.send("/app/hismsg", {}, content);
